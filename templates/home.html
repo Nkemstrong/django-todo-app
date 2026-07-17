@@ -1,148 +1,271 @@
+{% extends "base.html" %}
 
-{% extends "base.html"%}
+{% block title %}
+Home | TodoFlow
+{% endblock %}
 
 {% block content %}
+
 <div class="app">
-  <header>
-    <div class="eyebrow">Today</div>
-    <p>
-       {{greeting}}
-    <h1>What needs <em>doing</em>?</h1>
-    <p class="sub">Add a task, check it off when it's done. Nothing here leaves this page.</p>
-  </header>
 
-  <form id="task-form">
-    <input id="task-input" type="text" placeholder="e.g. Reply to client email" autocomplete="off" maxlength="140">
-    <button type="submit" class="add">Add task</button>
-  </form>
+    <!-- ==========================================
+         Hero Section
+    =========================================== -->
 
-  <div class="meta-row">
-    <span id="count-label">0 tasks</span>
-    <div class="filters">
-      <button data-filter="all" class="active">All</button>
-      <button data-filter="active">Active</button>
-      <button data-filter="done">Done</button>
+    <header>
+
+        <div class="eyebrow">
+            Today
+        </div>
+
+        <p class="text-muted mb-2">
+            {{ greeting }}
+        </p>
+
+        <h1>
+            What needs <em>doing</em>?
+        </h1>
+
+        <p class="sub">
+            Organize your day and stay productive.
+        </p>
+
+    </header>
+
+    <!-- ==========================================
+         Dashboard Statistics
+    =========================================== -->
+
+    <section class="stats-grid">
+
+        <div class="stat-card">
+
+            <span>Total Tasks</span>
+
+            <h3>{{ total_tasks }}</h3>
+
+        </div>
+
+        <div class="stat-card">
+
+            <span>Completed</span>
+
+            <h3>{{ completed_tasks }}</h3>
+
+        </div>
+
+        <div class="stat-card">
+
+            <span>Pending</span>
+
+            <h3>{{ pending_tasks }}</h3>
+
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         Add Task
+    =========================================== -->
+
+    <form
+        method="POST"
+        action="{% url 'add_task' %}"
+        id="task-form"
+        class="row g-3 align-items-center mb-4">
+
+        {% csrf_token %}
+
+        <div class="col-lg-5 col-md-12">
+
+            <input
+                id="task-input"
+                class="form-control"
+                type="text"
+                name="title"
+                placeholder="e.g. Reply to client email"
+                autocomplete="off"
+                maxlength="140"
+                required>
+
+        </div>
+
+        <div class="col-lg-4 col-md-8">
+
+            <input
+                class="form-control"
+                type="datetime-local"
+                name="due_time">
+
+        </div>
+
+        <div class="col-lg-3 col-md-4">
+
+            <button
+                type="submit"
+                class="btn btn-dark w-100">
+
+                <i class="bi bi-plus-circle me-2"></i>
+
+                Add Task
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- ==========================================
+         Task Filters
+    =========================================== -->
+
+    <div class="meta-row">
+
+        <span class="badge bg-dark fs-6">
+
+            {{ tasks.count }} Task{{ tasks.count|pluralize }}
+
+        </span>
+
+        <div class="filters">
+
+            <a href="{% url 'home' %}">
+                All
+            </a>
+
+            <a href="{% url 'tasks' 'true' %}">
+                Done
+            </a>
+
+            <a href="{% url 'tasks' 'false' %}">
+                Pending
+            </a>
+
+        </div>
+
     </div>
-  </div>
 
-  <ul id="list">
-    {%for task in tasks%}
+    <!-- ==========================================
+         Task List
+    =========================================== -->
 
-    {% if task.done %}
-    <li class="items">
-    {% else %}
-    <li class="item done">
-    {% endif %}
-      <span class="check" role="checkbox" aria-checked={{task.done}} tabindex="0">
-    <svg viewBox="0 0 22 22">
-      <circle cx="11" cy="11" r="9.3"></circle>
-      <path d="M6.5 11.5l3 3 6-6.5"></path>
-    </svg>
-    </span>
-      {{task.text}}
+    <ul id="list">
 
-    </li> 
-    {% endfor%} 
-  </ul>
-  <div class="empty" id="empty-state" style="display:none;">
-    <div class="glyph">nothing yet</div>
-    <p>Type something above and press Add task.</p>
-  </div>
+        {% for task in tasks %}
+
+        <li class="item card shadow-sm {% if task.done %}done{% endif %}">
+
+            <span class="check">
+
+                {% if task.done %}
+                    ✓
+                {% else %}
+                    ○
+                {% endif %}
+
+            </span>
+
+            <div class="content">
+
+                <div class="label">
+
+                    {{ task.title }}
+
+                    {% if task.done %}
+
+                        <span class="status completed">
+
+                            Completed
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="status pending">
+
+                            Pending
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                {% if task.due_time %}
+
+                    <small class="text-muted">
+
+                        <i class="bi bi-calendar-event me-1"></i>
+
+                        Due:
+                        {{ task.due_time|date:"M d, Y • H:i" }}
+
+                    </small>
+
+                {% endif %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <a
+                    href="{% url 'update_task' task.id %}"
+                    class="btn btn-outline-warning btn-sm rounded-pill px-3">
+
+                    <i class="bi bi-pencil"></i>
+
+                    Edit
+
+                </a>
+
+                <a
+                    href="{% url 'delete_task' task.id %}"
+                    class="btn btn-outline-danger btn-sm rounded-pill px-3">
+
+                    <i class="bi bi-trash"></i>
+
+                    Delete
+
+                </a>
+
+            </div>
+
+        </li>
+
+        {% empty %}
+
+        <div class="empty">
+
+            <div class="glyph">
+
+                📝
+
+            </div>
+
+            <h4>
+
+                No Tasks Yet
+
+            </h4>
+
+            <p>
+
+                You're all caught up.
+
+            </p>
+
+            <small>
+
+                Create your first task above to get started.
+
+            </small>
+
+        </div>
+
+        {% endfor %}
+
+    </ul>
+
 </div>
-{% endblock content %}
 
-
-
-{% comment %} //<script>
- const form = document.getElementById('task-form');
- const input = document.getElementById('task-input');
-  //const list = document.getElementById('list');
-  const countLabel = document.getElementById('count-label');
- const emptyState = document.getElementById('empty-state');
- const filterButtons = document.querySelectorAll('.filters button');
-
-  //let tasks = [
-   // { id: 1, text: 'Sketch the page layout', done: true },
-   // { id: 2, text: 'Wire up the add-task form', done: false },
-    //{ id: 3, text: 'Ship it', done: false }
-  //];
-  let nextId = 4;
-  let currentFilter = 'all';
-
-  const checkSVG = `
-    <svg viewBox="0 0 22 22">
-      <circle cx="11" cy="11" r="9.3"></circle>
-      <path d="M6.5 11.5l3 3 6-6.5"></path>
-    </svg>`;
-
-  function render(){
-    list.innerHTML = '';
-    const visible = tasks.filter(t => {
-      if(currentFilter === 'active') return !t.done;
-      if(currentFilter === 'done') return t.done;
-      return true;
-    });
-
-    visible.forEach(task => {
-      const li = document.createElement('li');
-      li.className = 'item' + (task.done ? ' done' : '');
-      li.innerHTML = `
-        <span class="check" role="checkbox" aria-checked="${task.done}" tabindex="0">${checkSVG}</span>
-        <span class="label">${escapeHTML(task.text)}</span>
-        <button class="remove" aria-label="Delete task">✕</button>
-      `;
-
-      li.querySelector('.check').addEventListener('click', () => toggle(task.id));
-      li.querySelector('.check').addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(task.id); }
-      });
-      li.querySelector('.remove').addEventListener('click', () => remove(task.id));
-
-      list.appendChild(li);
-    });
-
-    emptyState.style.display = visible.length ? 'none' : 'block';
-
-    const remaining = tasks.filter(t => !t.done).length;
-    countLabel.textContent = tasks.length === 0
-      ? '0 tasks'
-      : `${remaining} of ${tasks.length} left`;
-  }
-
-  function toggle(id){
-    tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
-    render();
-  }
-
-  function remove(id){
-    tasks = tasks.filter(t => t.id !== id);
-    render();
-  }
-
-  function escapeHTML(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const value = input.value.trim();
-    if(!value) return;
-    tasks.push({ id: nextId++, text: value, done: false });
-    input.value = '';
-    render();
-  });
-
-  filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      render();
-    });
-  });
-
-  render();
-</script> {% endcomment %}
-
+{% endblock %}
