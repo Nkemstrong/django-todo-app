@@ -98,6 +98,12 @@ STORAGES = {
     },
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://decoded-todo-app.onrender.com",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
